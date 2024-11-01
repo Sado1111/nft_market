@@ -1,4 +1,4 @@
-;; enhanced-nft.clar
+;; nft.clar
 ;; An enhanced NFT implementation in Clarity 6.0 with batch minting, burn and URI update functionality
 
 ;; Constants
@@ -88,5 +88,13 @@
         (let ((actual-sender (unwrap! (nft-get-owner? simple-nft token-id) err-not-token-owner)))
             (asserts! (is-eq actual-sender sender) err-not-token-owner)
             (try! (nft-transfer? simple-nft token-id sender recipient))
+            (ok true))))
+
+(define-public (update-token-uri (token-id uint) (new-uri (string-ascii 256)))
+    (begin
+        (let ((token-owner (unwrap! (nft-get-owner? simple-nft token-id) err-token-not-found)))
+            (asserts! (is-eq token-owner tx-sender) err-not-token-owner-update)
+            (asserts! (is-valid-token-uri new-uri) err-invalid-token-uri)
+            (map-set token-uri token-id new-uri)
             (ok true))))
 
