@@ -98,3 +98,41 @@
             (map-set token-uri token-id new-uri)
             (ok true))))
 
+;; Read-Only Functions
+(define-read-only (get-token-uri (token-id uint))
+    (ok (map-get? token-uri token-id)))
+
+(define-read-only (get-owner (token-id uint))
+    (ok (nft-get-owner? simple-nft token-id)))
+
+(define-read-only (get-last-token-id)
+    (ok (var-get last-token-id)))
+
+(define-read-only (is-burned (token-id uint))
+    (ok (is-token-burned token-id)))
+
+(define-read-only (get-batch-token-ids (start-id uint) (count uint))
+    (ok (map uint-to-response 
+        (unwrap-panic (as-max-len? 
+            (list-tokens start-id count) 
+            u100)))))
+
+(define-private (uint-to-response (id uint))
+    {
+        token-id: id,
+        uri: (unwrap-panic (get-token-uri id)),
+        owner: (unwrap-panic (get-owner id)),
+        burned: (unwrap-panic (is-burned id))
+    })
+
+(define-private (list-tokens (start uint) (count uint))
+    (map + 
+        (list start) 
+        (generate-sequence count)))
+
+(define-private (generate-sequence (length uint))
+    (map - (list length)))
+
+;; Contract initialization
+(begin
+    (var-set last-token-id u0))
